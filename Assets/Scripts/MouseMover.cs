@@ -5,45 +5,87 @@ public class MouseMover : MonoBehaviour
     public float moveSpeed = 5f;
     public Vector2 minBounds;
     public Vector2 maxBounds;
-    private Transform spriteTransform; // Referencia al hijo que contiene el sprite
+
+    private Transform spriteTransform;
+    private Rigidbody2D rb;
+    private bool isHurt = false;
+    public PlayerAnimationController animationController;
 
     void Start()
     {
-        // Buscar el objeto hijo con el sprite
         spriteTransform = transform.Find("Player");
+        rb = GetComponent<Rigidbody2D>();
 
         if (spriteTransform == null)
         {
             Debug.LogError("No se encontró el objeto hijo con el sprite. Verifica el nombre.");
         }
+
+        if (rb == null)
+        {
+            Debug.LogError("No se encontró un Rigidbody2D en el objeto.");
+        }
     }
 
     void Update()
     {
+        if (isHurt) return;
+
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         mousePosition.z = 0;
-
         Vector3 direction = mousePosition - transform.position;
 
-        // Voltear solo el objeto hijo en el eje X según la dirección
         if (spriteTransform != null)
         {
             if (direction.x < 0)
-                spriteTransform.localScale = new Vector3(-1, 1, 1); // Mirando a la izquierda
+                spriteTransform.localScale = new Vector3(-1, 1, 1);
             else
-                spriteTransform.localScale = new Vector3(1, 1, 1); // Mirando a la derecha
+                spriteTransform.localScale = new Vector3(1, 1, 1);
         }
 
-        // Mover hacia el mouse si hay distancia suficiente
-        if (direction.magnitude > 0.1f)
+        // Movimiento del jugador
+        if (direction.magnitude > 0.1f && !animationController.animator.GetBool("isShooting"))
         {
             direction.Normalize();
-            transform.position += direction * moveSpeed * Time.deltaTime;
+            rb.velocity = direction * moveSpeed;
+            animationController.SetRunning(true);
+        }
+        else
+        {
+            rb.velocity = Vector2.zero;
+            animationController.SetIdle(); // Cambiar a idle
         }
 
-        // Limitar el movimiento dentro de los límites
+        // Disparo
+        if (Input.GetButtonDown("Fire1"))
+        {
+            animationController.SetShooting(true); // Activar disparo
+            rb.velocity = Vector2.zero; // Detener el movimiento al disparar
+        }
+
+        // Al soltar el botón, volver a permitir el movimiento
+        if (Input.GetButtonUp("Fire1"))
+        {
+            animationController.SetShooting(false); // Desactivar el estado de disparo
+        }
+
         float clampedX = Mathf.Clamp(transform.position.x, minBounds.x, maxBounds.x);
         float clampedY = Mathf.Clamp(transform.position.y, minBounds.y, maxBounds.y);
         transform.position = new Vector3(clampedX, clampedY, 0);
+    }
+
+    public void TakeDamage()
+    {
+        if (animationController != null)
+        {
+            isHurt = true;
+            animationController.SetHurt();
+            Invoke(nameof(ResetHurtState), 0.5f);
+        }
+    }
+
+    private void ResetHurtState()
+    {
+        isHurt = false;
     }
 }
