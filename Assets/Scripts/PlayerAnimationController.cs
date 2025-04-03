@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class PlayerAnimationController : MonoBehaviour
 {
-    public Animator animator; // Hacer que el Animator sea público
+    public Animator animator; 
 
     void Start()
     {
@@ -17,7 +17,7 @@ public class PlayerAnimationController : MonoBehaviour
     public void SetRunning(bool isRunning)
     {
         animator.SetBool("run", isRunning);
-        animator.SetBool("idle", !isRunning); // Cambiar a idle si no está corriendo
+        animator.SetBool("idle", !isRunning);
     }
 
     public void SetShooting(bool isShooting)
@@ -25,14 +25,14 @@ public class PlayerAnimationController : MonoBehaviour
         animator.SetBool("isShooting", isShooting);
         if (isShooting)
         {
-            animator.SetTrigger("shoot"); // Activar la animación de disparo
+            animator.SetTrigger("shoot"); 
         }
     }
 
     public void SetIdle()
     {
         animator.SetBool("run", false);
-        animator.SetBool("idle", true); // Activar idle
+        animator.SetBool("idle", true); 
     }
 
     public void SetHurt()
